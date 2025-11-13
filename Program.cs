@@ -27,7 +27,7 @@ namespace cl_be
                     options.JsonSerializerOptions.WriteIndented = true;
                 });
 
-            //cors
+            //autorizzazione cors 
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontEnd", builder =>
@@ -37,8 +37,7 @@ namespace cl_be
                         .WithOrigins("http://localhost:4200")
                         .AllowAnyMethod()
                         .AllowAnyHeader()
-                        .AllowCredentials()
-                        ;
+                        .AllowCredentials();
                 });
             });
 
