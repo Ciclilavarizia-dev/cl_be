@@ -1,4 +1,4 @@
-﻿namespace cl_be.Models.Dto
+﻿namespace cl_be.Models.Dto.ProductDto
 {
     public class ProductDetailDto
     {
@@ -33,6 +33,9 @@
 
 
         public string ProductNumber { get; set; } = null!;
+
+
+        //public List<Review> Reviews { get; set; } = new();
 
     }
 }

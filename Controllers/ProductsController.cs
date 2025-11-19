@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using cl_be.Models;
-using cl_be.Models.Dto;
 using cl_be.Models.Pagination;
+using cl_be.Models.Dto.ProductDto;
 
 namespace cl_be.Controllers
 {
@@ -17,8 +12,14 @@ namespace cl_be.Controllers
     {
         private readonly AdventureWorksLt2019Context _context;
 
-        public ProductsController(AdventureWorksLt2019Context context)
+        //private readonly ReviewService _reviewService;
+
+        public ProductsController(
+            AdventureWorksLt2019Context context
+            //ReviewService reviewService
+            )
         {
+            //_reviewService= reviewService;
             _context = context;
         }
 
@@ -83,7 +84,8 @@ namespace cl_be.Controllers
                     ThumbNailPhoto = p.ThumbNailPhoto,
                     Size = p.Size,
                     Weight = p.Weight,
-                    ProductNumber = p.ProductNumber
+                    ProductNumber = p.ProductNumber,
+                    
                 })
                 .FirstOrDefaultAsync();
 
@@ -92,21 +94,59 @@ namespace cl_be.Controllers
                 return NotFound();
             }
 
+            // ⭐ RECUPERO REVIEW DA MONGODB
+            //productDto.Reviews = await _reviewService.GetReviewsForProduct(id);
+
             return Ok(productDto);
         }
 
 
         // PUT: api/Products/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, Product product)
+        public async Task<IActionResult> PutProduct(int id, [FromBody] ProductUpdateDto dto)
         {
-            if (id != product.ProductId)
+            // Controlla validità modello (includendo annotazioni)
+            if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest(ModelState);
             }
 
-            _context.Entry(product).State = EntityState.Modified;
+            if (id != dto.ProductId)
+            {
+                return BadRequest("ID nel percorso e nel body non coincidono.");
+            }
+
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            if (dto.ProductCategoryId.HasValue &&
+                !await _context.ProductCategories.AnyAsync(c => c.ProductCategoryId == dto.ProductCategoryId))
+            {
+                return BadRequest("Categoria prodotto non valida.");
+            }
+
+            if (dto.ProductModelId.HasValue &&
+                !await _context.ProductModels.AnyAsync(m => m.ProductModelId == dto.ProductModelId))
+            {
+                return BadRequest("Modello prodotto non valido.");
+            }
+
+            product.Name = dto.Name;
+            product.ProductNumber = dto.ProductNumber;
+            product.StandardCost = dto.StandardCost;
+            product.ListPrice = dto.ListPrice;
+            product.ProductCategoryId = dto.ProductCategoryId;
+            product.ProductModelId = dto.ProductModelId;
+            product.Color = dto.Color;
+            product.Size = dto.Size;
+            product.Weight = dto.Weight;
+            product.SellStartDate = dto.SellStartDate;
+            product.SellEndDate = dto.SellEndDate;
+            product.DiscontinuedDate = dto.DiscontinuedDate;
+            product.ModifiedDate = DateTime.UtcNow;
 
             try
             {
@@ -114,7 +154,7 @@ namespace cl_be.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProductExists(id))
+                if (!_context.Products.Any(e => e.ProductId == id))
                 {
                     return NotFound();
                 }
@@ -124,18 +164,68 @@ namespace cl_be.Controllers
                 }
             }
 
-            return NoContent();
+            return NoContent(); 
         }
 
+
         // POST: api/Products
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
+        public async Task<ActionResult<ProductDetailDto>> PostProduct([FromBody] ProductCreateDto dto)
         {
+            if (dto.ProductCategoryId.HasValue && !await _context.ProductCategories.AnyAsync(c => c.ProductCategoryId == dto.ProductCategoryId))
+            {
+                return BadRequest("Categoria prodotto non valida.");
+            }
+
+            // Validazione FK ProductModelId
+            if (dto.ProductModelId.HasValue && !await _context.ProductModels.AnyAsync(m => m.ProductModelId == dto.ProductModelId))
+            {
+                return BadRequest("Modello prodotto non valido.");
+            }
+
+            var product = new Product
+            {
+                Name = dto.Name,
+                ProductNumber = dto.ProductNumber,
+                StandardCost = dto.StandardCost,
+                ListPrice = dto.ListPrice,
+                ProductCategoryId = dto.ProductCategoryId,
+                ProductModelId = dto.ProductModelId,
+                Color = dto.Color,
+                Size = dto.Size,
+                Weight = dto.Weight,
+                //ThumbNailPhoto = dto.ThumbNailPhoto,
+                //ThumbnailPhotoFileName = dto.ThumbnailPhotoFileName,
+                SellStartDate = dto.SellStartDate,
+                SellEndDate = dto.SellEndDate,
+                DiscontinuedDate = dto.DiscontinuedDate,
+                ModifiedDate = DateTime.UtcNow,
+                Rowguid = Guid.NewGuid()
+            };
+
+            // Aggiungi e salva
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProduct", new { id = product.ProductId }, product);
+            
+            var result = new ProductDetailDto
+            {
+                ProductId = product.ProductId,
+                Name = product.Name,
+                Color = product.Color,
+                StandardCost = product.StandardCost,
+                ListPrice = product.ListPrice,
+                ProductCategoryId = product.ProductCategoryId,
+                CategoryName = dto.ProductCategoryId.HasValue ? (await _context!.ProductCategories!.FindAsync(dto.ProductCategoryId))!.Name : "No category",
+                ThumbNailPhoto = product.ThumbNailPhoto,
+                Size = product.Size,
+                Weight = product.Weight,
+                ProductNumber = product.ProductNumber
+
+
+            };
+
+            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, result);
         }
 
         // DELETE: api/Products/5
