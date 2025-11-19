@@ -8,7 +8,7 @@
         public int TotalPages { get; set; }
         public bool HasPrevious => CurrentPage > 1;
         public bool HasNext => CurrentPage < TotalPages;
-        public List<T> Items { get; set; }
+        public required List<T> Items { get; set; }
     }
 
 }

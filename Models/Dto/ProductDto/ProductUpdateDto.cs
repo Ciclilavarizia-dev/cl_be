@@ -2,15 +2,16 @@
 
 namespace cl_be.Models.Dto.ProductDto
 {
-    public class ProductCreateDto
+    public class ProductUpdateDto
     {
+        public int ProductId { get; set; }  
         [Required]
         [StringLength(50)]
-        public string Name { get; set; } =string.Empty;
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [StringLength(25)]
-        public string ProductNumber { get; set; } =string.Empty;
+        public string ProductNumber { get; set; } = string.Empty;
 
         [Range(0, double.MaxValue)]
         public decimal StandardCost { get; set; }
@@ -18,15 +19,14 @@ namespace cl_be.Models.Dto.ProductDto
         [Range(0, double.MaxValue)]
         public decimal ListPrice { get; set; }
 
-        public int? ProductCategoryId { get; set; }
+        public int? ProductCategoryId { get; set; } 
 
-        public int? ProductModelId { get; set; }
-
+        public int? ProductModelId { get; set; }   
         [StringLength(15)]
-        public string Color { get; set; } =string.Empty;
+        public string Color { get; set; } = string.Empty;
 
         [StringLength(5)]
-        public string Size { get; set; } =string.Empty;
+        public string Size { get; set; }  = string.Empty;
 
         [Range(0, double.MaxValue)]
         public decimal? Weight { get; set; }
@@ -41,6 +41,4 @@ namespace cl_be.Models.Dto.ProductDto
         public DateTime? DiscontinuedDate { get; set; }
     }
 
-
 }
-//public byte[] ThumbNailPhoto { get; set; }
