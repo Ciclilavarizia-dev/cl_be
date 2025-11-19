@@ -61,6 +61,10 @@ namespace cl_be
             });
 
 
+            //Servizio per connettersi al DB ReviewMDB MONGODB
+            builder.Services.Configure<ReviewMDBConfig>(
+                builder.Configuration.GetSection("ReviewMDB"));
+
             var app = builder.Build(); 
 
             // Configure the HTTP request pipeline.
