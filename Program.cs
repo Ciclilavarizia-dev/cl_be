@@ -1,5 +1,6 @@
 
 using cl_be.Models;
+using cl_be.Models.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -60,6 +61,12 @@ namespace cl_be
                     ?? throw new InvalidOperationException("Connessione non avvenuta"));
             });
 
+
+            //Servizio per connettersi al DB ReviewMDB MONGODB
+            builder.Services.Configure<ReviewMDBConfig>(
+                builder.Configuration.GetSection("ReviewMDB"));
+
+            builder.Services.AddSingleton<ReviewService>();
 
             var app = builder.Build(); 
 
