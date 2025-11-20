@@ -9,14 +9,10 @@ namespace cl_be.Models.Services
 
         public ReviewService(IOptions<ReviewMDBConfig> config)
         {
-            var mongoConfig = config.Value; // prelevo i valori da appsettings.json
-
-            if (string.IsNullOrEmpty(mongoConfig.ConnectionString))
-                throw new ArgumentNullException(nameof(mongoConfig.ConnectionString), "ConnectionString MongoDB mancante");
+            var mongoConfig = config.Value;
 
             var client = new MongoClient(mongoConfig.ConnectionString);
             var database = client.GetDatabase(mongoConfig.DatabaseName);
-
             _reviews = database.GetCollection<Review>(mongoConfig.ReviewsCollectionName);
         }
 

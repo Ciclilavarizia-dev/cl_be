@@ -63,9 +63,23 @@ namespace cl_be
 
 
             //Servizio per connettersi al DB ReviewMDB MONGODB
-            builder.Services.Configure<ReviewMDBConfig>(
-                builder.Configuration.GetSection("ReviewsDB"));
+            // Ottieni la sezione dal configuration
+            var mongoSection = builder.Configuration.GetSection("ReviewsDB");
 
+            // Controllo compatto, lancia eccezione se la sezione manca
+            var mongoConfig = mongoSection.Get<ReviewMDBConfig>()
+                ?? throw new InvalidOperationException("La sezione ReviewsDB è mancante o non valida in appsettings.json");
+
+            // Controlla che tutti i valori fondamentali siano presenti
+            if (string.IsNullOrEmpty(mongoConfig.ConnectionString) ||
+                string.IsNullOrEmpty(mongoConfig.DatabaseName) ||
+                string.IsNullOrEmpty(mongoConfig.ReviewsCollectionName))
+            {
+                throw new InvalidOperationException("La configurazione di MongoDB è incompleta. Controlla ReviewsDB in appsettings.json");
+            }
+
+            // Registra la configurazione e il servizio
+            builder.Services.Configure<ReviewMDBConfig>(mongoSection);
             builder.Services.AddSingleton<ReviewService>();
 
             var app = builder.Build(); 

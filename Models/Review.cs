@@ -10,6 +10,8 @@ namespace cl_be.Models
         public string? Id { get; set; }
 
         public int ProductId { get; set; }
+
+        public int CustomerId { get; set; }
         public double Rating { get; set; }
         public string Text { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
