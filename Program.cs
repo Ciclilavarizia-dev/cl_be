@@ -95,6 +95,8 @@ namespace cl_be
 
             app.UseAuthorization();
 
+            // Inserisci qui il middleware CORS
+            app.UseCors("AllowFrontEnd");
 
             app.MapControllers();
 

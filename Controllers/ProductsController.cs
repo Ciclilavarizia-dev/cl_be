@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using cl_be.Models;
-using cl_be.Models.Pagination;
+﻿using cl_be.Models;
 using cl_be.Models.Dto.ProductDto;
+using cl_be.Models.Pagination;
 using cl_be.Models.Services;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace cl_be.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("AllowFrontEnd")]
     public class ProductsController : ControllerBase
     {
         private readonly AdventureWorksLt2019Context _context;
