@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using cl_be.Models;
 using cl_be.Models.Pagination;
 using cl_be.Models.Dto.ProductDto;
+using cl_be.Models.Services;
 
 namespace cl_be.Controllers
 {
@@ -12,14 +13,12 @@ namespace cl_be.Controllers
     {
         private readonly AdventureWorksLt2019Context _context;
 
-        //private readonly ReviewService _reviewService;
+        private readonly ReviewService _reviewService;
 
         public ProductsController(
-            AdventureWorksLt2019Context context
-            //ReviewService reviewService
-            )
+            AdventureWorksLt2019Context context, ReviewService reviewService)
         {
-            //_reviewService= reviewService;
+            _reviewService= reviewService;
             _context = context;
         }
 
@@ -95,7 +94,7 @@ namespace cl_be.Controllers
             }
 
             // ⭐ RECUPERO REVIEW DA MONGODB
-            //productDto.Reviews = await _reviewService.GetReviewsForProduct(id);
+            productDto.Reviews = await _reviewService.GetReviewsForProduct(id);
 
             return Ok(productDto);
         }
