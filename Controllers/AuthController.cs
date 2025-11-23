@@ -44,7 +44,14 @@ namespace cl_be.Controllers
                 return Unauthorized("Password invalid");
 
             // Check user's role
-            string role = RoleToString(user.Role);
+            string role = string.Empty;
+            if (user.Role == 1)
+            {
+                role = "User";
+            } else if (user.Role == 2)
+            {
+                role = "Admin";
+            }
 
             // Da definire il token:
             var token = GenerateJwt(loginCredentials, role);
@@ -96,20 +103,6 @@ namespace cl_be.Controllers
             string tokenString = tokenHandler.WriteToken(token);
             return tokenString;
         }
-
-        private string RoleToString(byte role)
-        {
-            switch(role)
-            {
-                case 2:
-                    return "User";
-                case 3:
-                    return "Admin";
-                default:
-                    break;
-            }
-
-            return "Guest";
-        }
     }
+
 }
