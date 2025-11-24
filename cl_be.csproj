@@ -19,8 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\Dto\AddressDto\" />
-    <Folder Include="Models\Dto\CustomerDto\" />
     <Folder Include="Models\Dto\OrderDto\" />
   </ItemGroup>
 
