@@ -32,7 +32,7 @@ namespace cl_be.Controllers
                 .FirstOrDefaultAsync(u => u.Email == loginCredentials.Email);
 
             if (user == null)
-                return Unauthorized("Email is not registered");
+                return Unauthorized(new { message = "Email is not registered" });
 
             bool isValid = PasswordHelper.VerifyPassword(
                 loginCredentials.Password,
@@ -40,20 +40,16 @@ namespace cl_be.Controllers
                 user.PasswordSalt
             );
 
+            if (!isValid && user.AsUpdated == false)
+                return StatusCode(409, new { requiresPasswordUpdate = true });
+
             if (!isValid)
-                return Unauthorized("Password invalid");
+                return Unauthorized(new { message = "Password invalid" });
 
             // Check user's role
-            string role = string.Empty;
-            if (user.Role == 1)
-            {
-                role = "User";
-            } else if (user.Role == 2)
-            {
-                role = "Admin";
-            }
+            string role = user.Role == 2 ? "Admin" : "User";
 
-            // Da definire il token:
+            // JWT
             var token = GenerateJwt(loginCredentials, role);
 
             return Ok(new { Message = "Login successful", token});
