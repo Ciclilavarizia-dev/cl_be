@@ -1,4 +1,7 @@
-﻿namespace cl_be.Models.Dto.OrderDto
+﻿using cl_be.Models.Dto.AddressDto;
+
+namespace cl_be.Models.Dto.OrderDto
+
 {
     public class OrderDetailDto
     {
@@ -16,21 +19,13 @@
 
         public decimal TotalDue { get; set; }
 
-        // Address
-        //public AddressDto? BillToAddress { get; set; }
-        //public AddressDto? ShipToAddress { get; set; }
+
+        public ShipToAddressDto? BillToAddress { get; set; }
+        public ShipToAddressDto? ShipToAddress { get; set; }
 
         // Riga dettagli
         //public List<OrderLineDto> Lines { get; set; } = new();
 
-
-        //In dto separati
-        //public class AddressDto
-        //{
-        //    public string AddressLine1 { get; set; } = "";
-        //    public string City { get; set; } = "";
-        //    public string PostalCode { get; set; } = "";
-        //}
 
 
         //public class OrderLineDto
