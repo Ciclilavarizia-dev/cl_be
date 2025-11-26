@@ -48,11 +48,14 @@ namespace cl_be.Controllers
             if (!isValid)
                 return Unauthorized(new { message = "Password invalid" });
 
+            // Prendo Id del customer
+            int id = user.CustomerId;
+
             // Check user's role
             string role = user.Role == 2 ? "Admin" : "User";
 
             // JWT
-            var token = GenerateJwt(loginCredentials, role);
+            var token = GenerateJwt(loginCredentials, id, role);
 
             return Ok(new { Message = "Login successful", token});
         }
@@ -154,6 +157,7 @@ namespace cl_be.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new System.Security.Claims.ClaimsIdentity([
+                    new Claim("CustomerId", id.ToString()),
                     new Claim(ClaimTypes.Email, loginCredentials.Email),
                     new Claim(ClaimTypes.Role, role)
                 ]),
