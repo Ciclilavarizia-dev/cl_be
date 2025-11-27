@@ -149,5 +149,59 @@ namespace cl_be.Controllers
         //    {
         //        return _context.Customers.Any(e => e.CustomerId == id);
         //    }
+
+
+        // GET api/customer/1
+        [HttpGet("{customerId}")]
+        public async Task<ActionResult<CustomerProfileDto>> GetCustomerProfileInfo(int customerId)
+        {
+            // Recupera il customer
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+
+            if (customer == null)
+                return NotFound("Customer not found");
+
+            // Recupera indirizzi light
+            var addresses = await _context.CustomerAddresses
+                .Where(ca => ca.CustomerId == customerId)
+                .Include(ca => ca.Address)
+                .Select(ca => new AddressCustomerDto
+                {
+                    AddressId = ca.Address.AddressId,
+                    AddressLine1 = ca.Address.AddressLine1,
+                    City = ca.Address.City,
+                    PostalCode = ca.Address.PostalCode
+                })
+                .ToListAsync();
+
+            // Recupera ordini light
+            var orders = await _context.SalesOrderHeaders
+                .Where(o => o.CustomerId == customerId)
+                .OrderByDescending(o => o.OrderDate)
+                .Select(o => new OrderCustomerDto
+                {
+                    SalesOrderId = o.SalesOrderId,
+                    SalesOrderNumber = o.SalesOrderNumber!,
+                    OrderDate = o.OrderDate,
+                    TotalDue = o.TotalDue,
+                    Status = o.Status
+                })
+                .ToListAsync();
+
+            // Compila il DTO finale
+            var dto = new CustomerProfileDto
+            {
+                CustomerId = customer.CustomerId,
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                EmailAddress = customer.EmailAddress,
+                Phone = customer.Phone,
+                Addresses = addresses,
+                Orders = orders
+            };
+
+            return Ok(dto);
+        }
     }
 }
