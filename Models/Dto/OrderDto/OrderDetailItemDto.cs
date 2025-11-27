@@ -7,6 +7,5 @@
         public int OrderQty { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal LineTotal { get; set; }
-        public string? Thumbnail { get; set; }
     }
 }
