@@ -67,9 +67,25 @@ namespace cl_be.Controllers
                     SalesOrderNumber = o.SalesOrderNumber!,
                     OrderDate = o.OrderDate,
                     TotalDue = o.TotalDue,
-                    Status = o.Status
+                    Status = o.Status,
+                    StatusDescription = ""
                 })
                 .ToListAsync();
+
+            foreach (var o in orders)
+            {
+                o.StatusDescription = o.Status switch
+                {
+                    1 => "In Process",
+                    2 => "Approved",
+                    3 => "Backordered",
+                    4 => "Cancelled",
+                    5 => "Shipped",
+                    6 => "Closed",
+                    _ => "Unknown"
+                };
+            }
+
 
             // Compila il DTO finale
             var dto = new CustomerProfileDto
