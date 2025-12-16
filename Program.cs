@@ -2,6 +2,8 @@
 using cl_be.Models;
 using cl_be.Models.Auth;
 using cl_be.Models.Services;
+using cl_be.Services.Implementations;
+using cl_be.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -127,7 +129,10 @@ namespace cl_be
             builder.Services.Configure<ReviewMDBConfig>(mongoSection);
             builder.Services.AddSingleton<ReviewService>();
 
-            var app = builder.Build(); 
+            // Registra il Servizio AdminProductsService
+            builder.Services.AddScoped<IAdminProductService, AdminProductService>();
+
+            var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
