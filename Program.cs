@@ -133,6 +133,7 @@ namespace cl_be
             builder.Services.AddSingleton<ReviewService>();
 
             builder.Services.AddScoped<ICustomerService, CustomerService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
 
             var app = builder.Build(); 
 
