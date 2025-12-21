@@ -149,5 +149,38 @@ namespace cl_be.Services.Implementations
                 .OrderBy(m => m.Name)
                 .ToListAsync();
         }
+
+        public async Task UpdateAsync(UpdateProductDto dto)
+        {
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.ProductId == dto.ProductId);
+
+            if (product == null)
+                throw new KeyNotFoundException("Product not found");
+
+            // General
+            product.Name = dto.Name.Trim();
+            product.ProductNumber = dto.ProductNumber.Trim();
+            product.ProductModelId = dto.ProductModelId;
+            product.ProductCategoryId = dto.ProductCategoryId;
+
+            // Pricing
+            product.ListPrice = dto.ListPrice;
+            product.StandardCost = dto.StandardCost;
+
+            // Attributes
+            product.Color = dto.Color?.Trim();
+            product.Size = dto.Size?.Trim();
+            product.Weight = dto.Weight;
+
+            // Availability
+            product.SellStartDate = dto.SellStartDate;
+            product.SellEndDate = dto.SellEndDate;
+            product.DiscontinuedDate = dto.DiscontinuedDate;
+
+            product.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }
