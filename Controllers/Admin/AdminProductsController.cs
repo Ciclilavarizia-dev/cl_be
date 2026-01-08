@@ -1,6 +1,7 @@
 ﻿using cl_be.Models;
 using cl_be.Models.Dto.CustomerDto;
 using cl_be.Models.Dto.ProductDto;
+using cl_be.Models.Dto.ProductDto.Admin;
 using cl_be.Models.Pagination;
 using cl_be.Services;
 using cl_be.Services.Interfaces;
@@ -21,34 +22,33 @@ namespace cl_be.Controllers.Admin
             _adminProductService = adminProductService;
         }
 
-        /// <summary>
-        /// Admin: get product list. THIS IS FOR TABLE LIST SET UP
-        /// </summary>
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<ProductListDto>>> GetProducts(
-        //    int pageNumber = 1,
-        //    int pageSize = 20,
-        //    string? sortBy = null,
-        //    string? sortDirection = "asc")
-        //{
-        //    var result = await _adminProductService.GetProductsAsync(pageNumber, pageSize, sortBy, sortDirection);
-        //    return Ok(result);
-        //}
-
         [HttpGet]
-        public async Task<ActionResult<Page<ProductListDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50, [FromQuery] string? search = null)
+        public async Task<ActionResult<Page<AdminProductListDto>>> GetAll(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 50, 
+            [FromQuery] string? sortBy = null,
+            [FromQuery] string? sortDirection = "asc",
+            [FromQuery] string? search = null
+            )
         {
-            var result = await _adminProductService.GetAllProductsAsync(page, pageSize, search);
+            var result = await _adminProductService.GetAllProductsAsync(page, pageSize, sortBy, sortDirection, search);
             return Ok(result);
+        }
+
+        [HttpGet("GetProductDetail/{productId}")]
+        public async Task<ActionResult<AdminProductDetailDto>> GetProductDetail(int productId)
+        {
+            var dto = await _adminProductService.GetProductDetailsAsync(productId);
+            return Ok(dto);
         }
 
         /// <summary>
         /// Admin: get product for edit/create form
         /// </summary>
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<AdminProductEditDto>> GetProduct(int id)
+        [HttpGet("GetProductToEdit/{productId}")]
+        public async Task<ActionResult<AdminProductEditDto>> GetProductToEdit(int productId)
         {
-            var product = await _adminProductService.GetProductForEditAsync(id);
+            var product = await _adminProductService.GetProductToEditAsync(productId);
 
             if (product == null)
                 return NotFound();
@@ -70,8 +70,9 @@ namespace cl_be.Controllers.Admin
             return Ok(models);
         }
 
+        // PUT/ PATCH/ EDIT/ UPDATE
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAsync(
+        public async Task<IActionResult> UpdateProduct(
         int id,
         [FromBody] AdminProductUpdateDto dto)
         {
@@ -86,7 +87,7 @@ namespace cl_be.Controllers.Admin
             try
             {
                 /* 3. Delegate to service layer */
-                await _adminProductService.UpdateAsync(dto);
+                await _adminProductService.UpdateProductAsync(dto);
                 return NoContent(); // 204
             }
             catch (KeyNotFoundException ex)
@@ -96,6 +97,28 @@ namespace cl_be.Controllers.Admin
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { message = ex.Message });
+            }
+        }
+
+        // POST/ CREATE
+        [HttpPost]
+        public async Task<IActionResult> CreateProduct([FromBody] AdminProductCreateDto dto)
+        {
+            var productId = await _adminProductService.CreateProductAsync(dto);
+            return CreatedAtAction(nameof(CreateProduct), new { id = productId }, productId);
+        }
+
+        [HttpDelete("{productId}")]
+        public async Task<IActionResult> DeleteProduct(int productId)
+        {
+            try
+            {
+                await _adminProductService.DeleteProductAsync(productId);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = $"Error during the process of elimination: {ex.Message}"});
             }
         }
 

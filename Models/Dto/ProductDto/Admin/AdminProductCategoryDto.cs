@@ -1,4 +1,4 @@
-﻿namespace cl_be.Models.Dto.ProductDto
+﻿namespace cl_be.Models.Dto.ProductDto.Admin
 {
     public class AdminProductCategoryDto
     {

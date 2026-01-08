@@ -151,8 +151,6 @@ namespace cl_be
 
             app.UseHttpsRedirection();
 
-
-
             // Inserisci qui il middleware CORS
             app.UseCors("AllowFrontEnd");
 

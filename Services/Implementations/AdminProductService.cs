@@ -1,6 +1,7 @@
 ﻿using cl_be.Models;
 using cl_be.Models.Dto.CustomerDto;
 using cl_be.Models.Dto.ProductDto;
+using cl_be.Models.Dto.ProductDto.Admin;
 using cl_be.Models.Pagination;
 using cl_be.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,27 @@ namespace cl_be.Services.Implementations
             _context = context;
         }
 
-        // To get the list of products (table list version)
-        public async Task<PagedResult<ProductListDto>> GetProductsAsync(int pageNumber, int pageSize, string? sortBy, string? sortDirection)
+        // get list of products with pagination
+        public async Task<Page<AdminProductListDto>> GetAllProductsAsync(
+            int page, 
+            int pageSize,
+            string? sortBy,
+            string? sortDirection,
+            string? search=null
+        )
         {
-            var query = _context.Products.AsNoTracking();
+            var query = _context.Products
+                .AsNoTracking()
+                .Include(p => p.ProductCategory)
+                .ThenInclude(p => p.ParentProductCategory)
+                .AsQueryable();
 
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(p => p.Name.Contains(search) || p.ProductNumber.Contains(search));
+            }
+
+            // filtering options
             query = sortBy switch
             {
                 "name" => sortDirection == "desc"
@@ -35,7 +52,6 @@ namespace cl_be.Services.Implementations
                     ? query.OrderByDescending(p => p.ProductCategory!.Name)
                     : query.OrderBy(p => p.ProductCategory!.Name),
 
-                // I want to sort parent category too!
                 "parentcategory" => sortDirection == "desc"
                     ? query.OrderByDescending(p =>
                         p.ProductCategory != null &&
@@ -46,72 +62,28 @@ namespace cl_be.Services.Implementations
                         p.ProductCategory.ParentProductCategory != null
                             ? p.ProductCategory.ParentProductCategory.Name : null),
 
+                "modifieddate" => sortDirection == "desc"
+                    ? query.OrderByDescending(p => p.ModifiedDate)
+                    : query.OrderBy(p => p.ModifiedDate),
+
                 _ => query.OrderBy(p => p.ProductId),
             };
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new ProductListDto
-                {
-                    ProductId = p.ProductId,
-                    ProductNumber = p.ProductNumber,
-                    Name = p.Name,
-                    ListPrice = p.ListPrice,
-                    CategoryId = p.ProductCategoryId,
-                    CategoryName = p.ProductCategory != null
-                        ? p.ProductCategory.Name
-                        : null,
-
-                    ParentCategoryId = p.ProductCategory != null
-                        ? p.ProductCategory.ParentProductCategoryId
-                        : null,
-
-                    ParentCategoryName = p.ProductCategory != null
-                        && p.ProductCategory.ParentProductCategory != null
-                            ? p.ProductCategory.ParentProductCategory.Name
-                            : null,
-
-                    ModifiedDate = p.ModifiedDate,
-                })
-                .ToListAsync();
-
-            return new PagedResult<ProductListDto>
-            {
-                TotalCount = totalCount,
-                Items = items
-            };
-        }
-
-        // To get the list of products (modern UI version)
-        public async Task<Page<ProductListDto>> GetAllProductsAsync(int page, int pageSize, string? search=null)
-        {
-            var query = _context.Products.AsNoTracking(); // AsNoTracking migliora le performance in lettura
-
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                // Rimuoviamo ToLower() per testare se il DB gestisce l'insensibilità di default
-                query = query.Where(p => p.Name.Contains(search) || p.ProductNumber.Contains(search));
-            }
 
             var totalItems = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
             var items = await query
-                .OrderBy(p => p.ProductId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(p => new ProductListDto
+                .Select(p => new AdminProductListDto
                 {
                     ProductId = p.ProductId,
-                    ProductNumber = p.ProductNumber,
                     Name = p.Name,
+                    ProductNumber = p.ProductNumber
                 })
                 .ToListAsync();
 
-            return new Page<ProductListDto>
+            return new Page<AdminProductListDto>
             {
                 CurrentPage = page,
                 PageSize = pageSize,
@@ -121,7 +93,47 @@ namespace cl_be.Services.Implementations
             };
         }
 
-        public async Task<AdminProductEditDto?> GetProductForEditAsync(int productId)
+        public async Task<AdminProductDetailDto> GetProductDetailsAsync(int productId)
+        {
+            var product = await _context.Products
+                .AsNoTracking()
+                .Include(p => p.ProductCategory)
+                    .ThenInclude(c => c.ParentProductCategory)
+                .Include(p => p.ProductModel)
+                .Where(p => p.ProductId == productId)
+                .Select(p => new AdminProductDetailDto
+                {
+                    ProductId = p.ProductId,
+                    // general:
+                    ProductParentCategoryName =
+                        p.ProductCategory.ParentProductCategory != null
+                            ? p.ProductCategory.ParentProductCategory.Name
+                            : null,
+                    ProductCategoryName = p.ProductCategory.Name,
+                    ProductModelName = p.ProductModel.Name,
+                    ProductNumber = p.ProductNumber,
+                    Name = p.Name,
+                    // pricing:
+                    ListPrice = p.ListPrice,
+                    StandardCost = p.StandardCost,
+                    // attributes:
+                    Color = p.Color,
+                    Size = p.Size,
+                    Weight = p.Weight,
+                    // availability:
+                    SellStartDate = p.SellStartDate,
+                    SellEndDate = p.SellEndDate,
+                    DiscontinuedDate = p.DiscontinuedDate,
+                })
+                .FirstOrDefaultAsync();
+
+            if (product == null)
+                throw new KeyNotFoundException("Product not found");
+
+            return product;
+        }
+
+        public async Task<AdminProductEditDto?> GetProductToEditAsync(int productId)
         {
             var product = await _context.Products
                 .AsNoTracking()
@@ -191,7 +203,7 @@ namespace cl_be.Services.Implementations
         }
 
         // To update product
-        public async Task UpdateAsync(AdminProductUpdateDto dto)
+        public async Task UpdateProductAsync(AdminProductUpdateDto dto)
         {
             var product = await _context.Products
                 .FirstOrDefaultAsync(p => p.ProductId == dto.ProductId);
@@ -220,6 +232,51 @@ namespace cl_be.Services.Implementations
             product.DiscontinuedDate = dto.DiscontinuedDate;
 
             product.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
+
+        // CREATE/ADD NEW
+        public async Task<int> CreateProductAsync(AdminProductCreateDto dto)
+        {
+            // validation: list price > standard cost
+            if (dto.ListPrice < dto.StandardCost)
+                throw new InvalidOperationException("List price cannot be lower than standard cost.");
+
+            var product = new Product
+            {
+                ProductCategoryId = dto.ProductCategoryId,
+                ProductModelId = dto.ProductModelId,
+                ProductNumber = dto.ProductNumber,
+                Name = dto.Name,
+
+                ListPrice = dto.ListPrice,
+                StandardCost = dto.StandardCost,
+
+                Color = dto.Color,
+                Size = dto.Size,
+                Weight = dto.Weight,
+
+                SellStartDate = dto.SellStartDate,
+                SellEndDate = dto.SellEndDate,
+                DiscontinuedDate = dto.DiscontinuedDate,
+
+                ModifiedDate = DateTime.UtcNow
+            };
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            return product.ProductId;
+        }
+
+        public async Task DeleteProductAsync(int productId)
+        {
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            if (product == null) throw new KeyNotFoundException("Product not found");
+
+            _context.Products.Remove(product);
 
             await _context.SaveChangesAsync();
         }

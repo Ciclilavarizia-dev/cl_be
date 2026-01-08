@@ -1,14 +1,12 @@
-﻿namespace cl_be.Models.Dto.ProductDto
+﻿namespace cl_be.Models.Dto.ProductDto.Admin
 {
-    public class AdminProductEditDto
+    public class AdminProductCreateDto
     {
         // General
-        public int ProductId { get; set; }
-        public string Name { get; set; } = null!;
-        public string ProductNumber { get; set; } = null!;
-        public int? ProductCategoryId { get; set; }
-        public int? ParentCategoryId { get; set; }
+        public int ProductCategoryId { get; set; }
         public int? ProductModelId { get; set; }
+        public string ProductNumber { get; set; } = null!;
+        public string Name { get; set; } = null!;
 
         // Pricing
         public decimal ListPrice { get; set; }
@@ -23,8 +21,5 @@
         public DateTime SellStartDate { get; set; }
         public DateTime? SellEndDate { get; set; }
         public DateTime? DiscontinuedDate { get; set; }
-
-        // Business rules
-        public bool HasOrders { get; set; }
     }
 }

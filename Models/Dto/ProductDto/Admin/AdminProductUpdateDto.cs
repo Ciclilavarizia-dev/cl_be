@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace cl_be.Models.Dto.ProductDto
+namespace cl_be.Models.Dto.ProductDto.Admin
 {
     public class AdminProductUpdateDto
     {
