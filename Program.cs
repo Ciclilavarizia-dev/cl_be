@@ -3,6 +3,8 @@ using cl_be.Interfaces.IServices;
 using cl_be.Models;
 using cl_be.Models.Auth;
 using cl_be.Models.Services;
+using cl_be.Services.Implementations;
+using cl_be.Services.Interfaces;
 using cl_be.Services;
 using cl_be.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -135,7 +137,10 @@ namespace cl_be
             builder.Services.AddScoped<ICustomerService, CustomerService>();
             builder.Services.AddScoped<IOrderService, OrderService>();
 
-            var app = builder.Build(); 
+            // Registra il Servizio AdminProductsService
+            builder.Services.AddScoped<IAdminProductService, AdminProductService>();
+
+            var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -145,8 +150,6 @@ namespace cl_be
             }
 
             app.UseHttpsRedirection();
-
-
 
             // Inserisci qui il middleware CORS
             app.UseCors("AllowFrontEnd");

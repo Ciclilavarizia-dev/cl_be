@@ -1,6 +1,7 @@
 ﻿using cl_be.Models;
 using cl_be.Models.Dto.CategoryDto;
 using cl_be.Models.Dto.ProductDto;
+using cl_be.Models.Dto.ProductDto.Admin;
 using cl_be.Models.Pagination;
 using cl_be.Models.Services;
 using Microsoft.AspNetCore.Cors;
@@ -226,7 +227,7 @@ namespace cl_be.Controllers
 
         // PUT: api/Products/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, [FromBody] ProductUpdateDto dto)
+        public async Task<IActionResult> PutProduct(int id, [FromBody] AdminProductUpdateDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if (id != dto.ProductId) return BadRequest("ID mismatch");
